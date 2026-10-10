@@ -14,6 +14,10 @@ int main() {
   arguments args;
   check(modmap("-x c++-module\n-fmodule-output=\"out/base.pcm\"\n-fmodule-file=\"a=with space/a.pcm\"\n",args,false), "POSIX module map");
   check(args==arguments({"-x","c++-module","-fmodule-output=out/base.pcm","-fmodule-file=a=with space/a.pcm"}), "module argument values");
+  arguments unquoted;
+  check(modmap("-x c++-module\n-fmodule-output=out/base.pcm\n-fmodule-file=a=out/a.pcm\n",unquoted,false), "older CMake module map");
+  check(unquoted==arguments({"-x","c++-module","-fmodule-output=out/base.pcm","-fmodule-file=a=out/a.pcm"}), "unquoted values");
+  check(!modmap("-fmodule-file=a=two words.pcm\n",unquoted,false), "unquoted spaces bypass");
   args.clear();
   check(modmap("-fmodule-file=\"a=C:\\module files\\a.pcm\"\r\n",args,true), "Windows module map");
   check(args==arguments({"-fmodule-file=a=C:\\module files\\a.pcm"}), "Windows separators");

@@ -266,6 +266,14 @@ namespace modcache {
     while (std::getline(stream,line)) {
       if (!line.empty() && line.back() == '\r') line.pop_back();
       if (!windows && line == "-x c++-module") { parsed.push_back("-x"); parsed.push_back("c++-module"); continue; }
+      // Older CMake emits unquoted module values. Accept those only when
+      // they are single response-file words; the same value checks follow.
+      auto equal = line.find('=');
+      if (equal != std::string::npos && equal+1 < line.size() && line[equal+1] != '"') {
+        if (line.find_first_of(" \t\"'") != std::string::npos) return false;
+        line.insert(equal+1,1,'"');
+        line += '"';
+      }
       std::smatch match;
       static std::regex const module("-fmodule-file=\"([A-Za-z_][A-Za-z_0-9.:]*)=([^\"\r\n]+)\"");
       static std::regex const output("-fmodule-output=\"([^\"\r\n]+)\"");

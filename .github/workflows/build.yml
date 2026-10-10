@@ -1,0 +1,42 @@
+name: build
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Install
+        run: cmake --install build --config Release
+      - name: Check installed package
+        run: cmake -S tests/package -B package-build -DCMAKE_PREFIX_PATH=${{ github.workspace }}/install
+      - name: Set up sccache
+        if: runner.os == 'Linux'
+        uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
+      - name: Check module cache invalidation
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S . -B build -DMODCACHE_TEST_MODULES=ON -DMODCACHE_TEST_COMPILER=clang++-18
+          ctest --test-dir build -R modcache.modules --output-on-failure

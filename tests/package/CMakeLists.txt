@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: BSD-2-Clause OR Apache-2.0
+cmake_minimum_required(VERSION 3.28)
+project(modcache_package NONE)
+find_package(modcache CONFIG REQUIRED)
+get_target_property(configurations modcache::modcache IMPORTED_CONFIGURATIONS)
+list(GET configurations 0 configuration)
+get_target_property(executable modcache::modcache IMPORTED_LOCATION_${configuration})
+execute_process(COMMAND "${executable}" --help RESULT_VARIABLE status)
+if(NOT status EQUAL 0)
+  message(FATAL_ERROR "The installed launcher did not run")
+endif()

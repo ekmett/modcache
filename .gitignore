@@ -1,0 +1,4 @@
+/build*/
+/install/
+/package-build/
+.DS_Store

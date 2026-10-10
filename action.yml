@@ -1,0 +1,23 @@
+name: Set up modcache
+description: Build the C++11 launcher and put it on PATH. Requires CMake and Ninja.
+runs:
+  using: composite
+  steps:
+    - name: Build modcache
+      shell: bash
+      env:
+        MODCACHE_SOURCE: ${{ github.action_path }}
+      run: |
+        compiler=clang++
+        extra=()
+        if [[ "$RUNNER_OS" == Windows ]]; then
+          compiler=clang-cl
+          extra+=(-DCMAKE_LINKER_TYPE=LLD)
+        fi
+        cmake -S "$MODCACHE_SOURCE" -B "$RUNNER_TEMP/modcache-build" -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$compiler" \
+          -DCMAKE_CXX_COMPILER_LAUNCHER= -DMODCACHE_BUILD_TESTS=OFF \
+          -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/modcache-install" "${extra[@]}"
+        cmake --build "$RUNNER_TEMP/modcache-build" --parallel
+        cmake --install "$RUNNER_TEMP/modcache-build"
+        echo "$RUNNER_TEMP/modcache-install/bin" >> "$GITHUB_PATH"

@@ -96,3 +96,15 @@ Use `clang-cl` for that option on Windows, from a configured developer shell.
 ## License
 
 [BSD-2-Clause OR Apache-2.0](LICENSE.md).
+
+## GitHub Actions
+
+After setting up Clang, CMake, Ninja and sccache:
+
+```yaml
+- uses: ekmett/modcache@main
+- run: cmake -S . -B build -DCMAKE_CXX_COMPILER_LAUNCHER=modcache
+```
+
+The action builds the launcher once and adds it to PATH. It does not change
+sccache's storage settings or select a launcher for unrelated builds.
